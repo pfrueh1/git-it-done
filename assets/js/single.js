@@ -1,4 +1,30 @@
 let IssueContainerEl = document.querySelector("#issues-container");
+let limitWarningEl = document.querySelector("#limit-warning");
+let repoNameEl = document.querySelector("#repo-name");
+
+function displayWarning(repo) {
+    limitWarningEl.textContent = "To see more than 30 issues, visit ";
+    let linkEl = document.createElement("a");
+    linkEl.textContent = "See more issues on Github.com";
+    linkEl.setAttribute("href", "https://github.com/" + repo + "/issues");
+    linkEl.setAttribute("target", "_blank");
+    //append to warning container
+    limitWarningEl.appendChild(linkEl);
+}
+
+function getRepoName() {
+    let queryString = document.location.search;
+    //pull user and repo name from querystring
+    let repoName = queryString.split("=")[1];
+    //if reponame exists, feed name into text box and getrepoissues function
+    if(repoName){
+        getRepoIssues(repoName);
+        repoNameEl.textContent = repoName;
+    }else {
+        //otherwise, redirect to homepage
+        document.location.replace("./index.html");
+    }
+};
 
 function getRepoIssues(repo) {
     var apiUrl = "https://api.github.com/repos/" + repo + "/issues?direction=asc";
@@ -8,15 +34,22 @@ function getRepoIssues(repo) {
         if (response.ok) {
             response.json().then(function(data){
                 displayIssues(data);
+
+                //check if api has paginated issues
+                if ( response.headers.get("Link")) {
+                    displayWarning(repo);
+                }
             });
         }else {
-            alert("there was a problem with your request!");
+            document.location.replace("./index.html");
         }
     });
     
 };
 
 function displayIssues(issues){
+
+    // if repo has no open issues
     if (issues.length === 0) {
         IssueContainerEl.textContent = "This repo has no open issues!";
         return;
@@ -48,4 +81,4 @@ function displayIssues(issues){
     }
 };
 
-getRepoIssues("pfrueh1/CFWS");
+getRepoName();
